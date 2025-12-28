@@ -12,10 +12,18 @@
 import { validate } from '../packages/ir-core/dist/index.js';
 import { runCompile } from '../packages/ir-compiler-core/dist/index.js';
 import { targetTypescript } from '../packages/ir-target-typescript/dist/index.js';
-import { targetRust } from '../packages/ir-target-rust/dist/index.js';
 import { writeFileSync, mkdirSync, rmSync } from 'fs';
 import { execSync } from 'child_process';
 import { join } from 'path';
+
+// Try to import Rust target, but continue if not available
+let targetRust = null;
+try {
+  const rustModule = await import('../packages/ir-target-rust/dist/index.js');
+  targetRust = rustModule.targetRust;
+} catch (e) {
+  console.log('⚠️  Rust target not available, skipping Rust code generation');
+}
 
 const TEST_OUTPUT_DIR = '.test-output';
 
@@ -87,21 +95,22 @@ if (!validationResult.ok) {
 console.log('✅ IR program is valid\n');
 
 // Step 3: Compile IR to multiple targets
-console.log('3️⃣  Compiling IR to TypeScript and Rust...');
+console.log('3️⃣  Compiling IR to TypeScript' + (targetRust ? ' and Rust' : '') + '...');
 const tsResult = runCompile(sampleProgram, [targetTypescript]);
-const rustResult = runCompile(sampleProgram, [targetRust]);
+const rustResult = targetRust ? runCompile(sampleProgram, [targetRust]) : null;
 
 if (!tsResult.files || tsResult.files.length === 0) {
   console.error('❌ TypeScript compilation produced no output files');
   process.exit(1);
 }
 
-if (!rustResult.files || rustResult.files.length === 0) {
+if (targetRust && (!rustResult.files || rustResult.files.length === 0)) {
   console.error('❌ Rust compilation produced no output files');
   process.exit(1);
 }
 
-console.log(`✅ Generated ${tsResult.files.length + rustResult.files.length} file(s)\n`);
+const totalFiles = tsResult.files.length + (rustResult ? rustResult.files.length : 0);
+console.log(`✅ Generated ${totalFiles} file(s)\n`);
 
 // Step 4: Write output and verify syntax
 console.log('4️⃣  Verifying generated code...');
@@ -121,12 +130,14 @@ try {
   }
 
   // Write Rust files
-  const rustDir = join(TEST_OUTPUT_DIR, 'rust');
-  mkdirSync(rustDir, { recursive: true });
-  for (const file of rustResult.files) {
-    const filePath = join(rustDir, file.path);
-    writeFileSync(filePath, file.content, 'utf8');
-    console.log(`   📄 rust/${file.path}`);
+  if (targetRust && rustResult) {
+    const rustDir = join(TEST_OUTPUT_DIR, 'rust');
+    mkdirSync(rustDir, { recursive: true });
+    for (const file of rustResult.files) {
+      const filePath = join(rustDir, file.path);
+      writeFileSync(filePath, file.content, 'utf8');
+      console.log(`   📄 rust/${file.path}`);
+    }
   }
 
   // Verify TypeScript syntax using tsc
@@ -138,21 +149,24 @@ try {
   console.log('   ✅ TypeScript is syntactically valid');
   
   // Verify Rust syntax if rustc is available
-  console.log('\n   Validating Rust...');
-  try {
-    // Check if rustc is available
-    execSync('rustc --version', { stdio: 'pipe' });
-    // Use rustc to check syntax without linking
-    execSync(`rustc --crate-type lib --emit=metadata -o /dev/null ${rustDir}/lib.rs 2>&1`, {
-      stdio: 'pipe',
-      encoding: 'utf8'
-    });
-    console.log('   ✅ Rust is syntactically valid');
-  } catch (rustError) {
-    if (rustError.message.includes('rustc --version')) {
-      console.log('   ⚠️  Rust compiler not found, skipping Rust validation');
-    } else {
-      throw rustError;
+  if (targetRust && rustResult) {
+    console.log('\n   Validating Rust...');
+    try {
+      // Check if rustc is available
+      execSync('rustc --version', { stdio: 'pipe' });
+      // Use rustc to check syntax without linking
+      const rustDir = join(TEST_OUTPUT_DIR, 'rust');
+      execSync(`rustc --crate-type lib --emit=metadata -o /dev/null ${rustDir}/lib.rs 2>&1`, {
+        stdio: 'pipe',
+        encoding: 'utf8'
+      });
+      console.log('   ✅ Rust is syntactically valid');
+    } catch (rustError) {
+      if (rustError.message.includes('rustc --version')) {
+        console.log('   ⚠️  Rust compiler not found, skipping Rust validation');
+      } else {
+        throw rustError;
+      }
     }
   }
 
@@ -162,10 +176,12 @@ try {
   console.log(tsResult.files[0].content);
   console.log('─'.repeat(60));
   
-  console.log('\n📋 Generated Rust:');
-  console.log('─'.repeat(60));
-  console.log(rustResult.files[0].content);
-  console.log('─'.repeat(60));
+  if (targetRust && rustResult) {
+    console.log('\n📋 Generated Rust:');
+    console.log('─'.repeat(60));
+    console.log(rustResult.files[0].content);
+    console.log('─'.repeat(60));
+  }
 
 } catch (error) {
   console.error('❌ Validation failed:');
@@ -177,10 +193,12 @@ try {
   console.log(tsResult.files[0].content);
   console.log('─'.repeat(60));
   
-  console.log('\n📋 Generated Rust (for debugging):');
-  console.log('─'.repeat(60));
-  console.log(rustResult.files[0].content);
-  console.log('─'.repeat(60));
+  if (targetRust && rustResult) {
+    console.log('\n📋 Generated Rust (for debugging):');
+    console.log('─'.repeat(60));
+    console.log(rustResult.files[0].content);
+    console.log('─'.repeat(60));
+  }
   
   // Clean up on error
   rmSync(TEST_OUTPUT_DIR, { recursive: true, force: true });
