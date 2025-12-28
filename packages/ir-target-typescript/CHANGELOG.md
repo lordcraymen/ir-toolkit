@@ -1,5 +1,11 @@
 # @lordcraymen/ir-target-typescript
 
+## 0.2.0
+
+### Minor Changes
+
+- Added basic Rust build target
+
 ## 0.1.1
 
 ### Patch Changes

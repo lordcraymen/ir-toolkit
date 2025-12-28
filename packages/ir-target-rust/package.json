@@ -1,6 +1,6 @@
 {
   "name": "@lordcraymen/ir-target-rust",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "Rust target for the IR Toolkit",
   "main": "./dist/index.js",
@@ -36,6 +36,10 @@
     "url": "https://github.com/lordcraymen/ir-toolkit/issues"
   },
   "homepage": "https://github.com/lordcraymen/ir-toolkit#readme",
-  "keywords": ["target", "rust", "code-generation"],
+  "keywords": [
+    "target",
+    "rust",
+    "code-generation"
+  ],
   "license": "UNLICENSED"
 }

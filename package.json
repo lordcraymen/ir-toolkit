@@ -20,7 +20,7 @@
     "prepare": "node -e \"try { require('fs').mkdirSync('.git/hooks', {recursive: true}) } catch(e) {}\" && node -e \"require('fs').copyFileSync('tooling/pre-commit.sh', '.git/hooks/pre-commit')\" && node -e \"require('fs').chmodSync('.git/hooks/pre-commit', '755')\" || true",
     "changeset:add": "changeset add",
     "changeset:version": "changeset version",
-    "changeset:publish": "changeset publish"
+    "changeset:publish": "changeset publish && git push --follow-tags"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.1",
