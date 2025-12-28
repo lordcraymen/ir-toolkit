@@ -1,9 +1,18 @@
 // IR Node Types
-export type IRNodeType = 'program' | 'statement' | 'expression' | 'literal';
+export type IRNodeType = 
+  | 'program' 
+  | 'function' 
+  | 'parameter' 
+  | 'type'
+  | 'statement' 
+  | 'expression' 
+  | 'literal'
+  | 'return';
 
 export interface IRNode {
   type: IRNodeType;
   value?: unknown;
+  name?: string;
   children?: IRNode[];
 }
 

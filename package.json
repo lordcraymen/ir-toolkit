@@ -15,6 +15,7 @@
     "typecheck": "tsc -p tsconfig.base.json --noEmit",
     "verify": "npm run ci:install && npm run lint && npm run test && npm run build",
     "smoke": "node tooling/smoke.mjs",
+    "integration-test": "node tooling/integration-test.mjs",
     "changeset:add": "changeset add",
     "changeset:version": "changeset version",
     "changeset:publish": "changeset publish"
