@@ -1,4 +1,4 @@
-import type { IRProgram } from '@lordcraymen/ir-core';
+import type { IRProgram, IRNode } from '@lordcraymen/ir-core';
 
 // Emit types
 export interface EmitFile {
@@ -8,6 +8,24 @@ export interface EmitFile {
 
 export interface EmitResult {
   files: EmitFile[];
+}
+
+// Codegen pass - target-specific code generation
+// These are injected into targets to customize code generation
+export type CodegenPass = (_node: IRNode, _context: CodegenContext) => string | null;
+
+export interface CodegenContext {
+  indent: string;
+  defaultGenerator: (_node: IRNode, _indent: string) => string;
+}
+
+// Codegen passes organized by node type
+export interface CodegenPasses {
+  function?: CodegenPass;
+  expression?: CodegenPass;
+  literal?: CodegenPass;
+  return?: CodegenPass;
+  [key: string]: CodegenPass | undefined;
 }
 
 // Target interface

@@ -1,23 +1,25 @@
 #!/usr/bin/env node
 
 /**
- * Integration test demonstrating IR passes
+ * Integration test demonstrating two-layer pass architecture
  * 
- * This test shows how to use passes to transform IR before code generation:
- * 1. Create a sample IR program
- * 2. Apply custom passes (visibility, export style)
- * 3. Compile to TypeScript
- * 4. Verify the transformations worked
+ * Layer 1: IR Passes (target-agnostic semantic transformations)
+ * Layer 2: Codegen Passes (target-specific code generation)
+ * 
+ * This demonstrates:
+ * 1. Constant folding (IR pass - structural transformation)
+ * 2. Arrow function generation (Codegen pass - TypeScript-specific)
  */
 
 import { runCompile } from '../packages/ir-compiler-core/dist/index.js';
 import { runPasses, cloneIR, traverseIR } from '../packages/ir-compiler-passes/dist/index.js';
 import { targetTypescript } from '../packages/ir-target-typescript/dist/index.js';
 
-console.log('🧪 Testing IR Passes\n');
+console.log('🧪 Two-Layer Pass Architecture Demo\n');
+console.log('═'.repeat(60));
 
-// Step 1: Create a sample IR program
-console.log('1️⃣  Creating sample IR program...');
+// Step 1: Create a sample IR program with string concatenation
+console.log('\n1️⃣  Creating sample IR program...');
 const sampleProgram = {
   version: '1.0.0',
   root: {
@@ -40,7 +42,8 @@ const sampleProgram = {
                 type: 'expression',
                 children: [
                   { type: 'literal', value: 'Hello, ' },
-                  { type: 'literal', value: 'World!' }
+                  { type: 'literal', value: 'World' },
+                  { type: 'literal', value: '!' }
                 ]
               }
             ]
@@ -49,7 +52,7 @@ const sampleProgram = {
       },
       {
         type: 'function',
-        name: 'helper',
+        name: 'getNumber',
         value: 'number',
         children: [
           {
@@ -62,107 +65,123 @@ const sampleProgram = {
   }
 };
 
-console.log('✅ Created IR with 2 functions\n');
+console.log('✅ Created IR with string concatenation: "Hello, " + "World" + "!"');
 
-// Step 2: Define custom passes
-console.log('2️⃣  Defining custom passes...');
+// Compile WITHOUT any passes first
+console.log('\n2️⃣  Compiling WITHOUT passes (baseline)...');
+const baselineResult = runCompile(sampleProgram, [targetTypescript]);
+console.log('─'.repeat(60));
+console.log(baselineResult.files[0].content);
+console.log('─'.repeat(60));
 
-// Pass 1: Add visibility metadata (mark functions as public)
-const visibilityPass = {
-  name: 'visibility-analysis',
+// Step 2: Define Layer 1 - IR Passes (target-agnostic)
+console.log('\n3️⃣  LAYER 1: Defining IR passes (target-agnostic)...');
+
+// Constant folding pass - combines consecutive string literals
+const constantFoldingPass = {
+  name: 'constant-folding',
   transform(ir) {
-    console.log('   Running visibility-analysis pass...');
+    console.log('   🔧 Running constant-folding pass...');
     const newIR = cloneIR(ir);
-    let functionCount = 0;
+    let foldCount = 0;
+    
     traverseIR(newIR.root, (node) => {
-      if (node.type === 'function') {
-        // Add metadata to indicate this function should be public
-        Object.assign(node, { 
-          isPublic: true,
-          comment: `This function is marked as public by visibility pass`
-        });
-        functionCount++;
+      if (node.type === 'expression' && node.children) {
+        // Check if all children are string literals
+        const allStrings = node.children.every(
+          c => c.type === 'literal' && typeof c.value === 'string'
+        );
+        
+        if (allStrings && node.children.length > 1) {
+          // Fold into single literal
+          const combined = node.children
+            .map(c => c.value)
+            .join('');
+          node.children = [{ type: 'literal', value: combined }];
+          foldCount++;
+          console.log(`   ✅ Folded string literals: "${combined}"`);
+        }
       }
     });
-    console.log(`   ✅ Marked ${functionCount} functions as public`);
+    
+    console.log(`   📊 Total expressions folded: ${foldCount}`);
     return newIR;
   }
 };
 
-// Pass 2: Add export style preference (TypeScript-specific but target-agnostic)
-const exportStylePass = {
-  name: 'export-style',
-  transform(ir) {
-    console.log('   Running export-style pass...');
-    const newIR = cloneIR(ir);
-    traverseIR(newIR.root, (node) => {
-      if (node.type === 'function') {
-        // Add metadata about export style preference
-        Object.assign(node, { 
-          exportStyle: 'inline',  // could be 'inline', 'end', 'named-export', etc.
-          moduleType: 'esm'
-        });
-      }
-    });
-    console.log('   ✅ Added export style metadata');
-    return newIR;
-  }
-};
+console.log('✅ Defined constant-folding pass (transforms IR structure)');
 
-// Pass 3: Add documentation metadata
-const docPass = {
-  name: 'documentation',
-  transform(ir) {
-    console.log('   Running documentation pass...');
-    const newIR = cloneIR(ir);
-    traverseIR(newIR.root, (node) => {
-      if (node.type === 'function') {
-        Object.assign(node, {
-          docComment: `Generated function: ${node.name || 'anonymous'}`
-        });
-      }
-    });
-    console.log('   ✅ Added documentation metadata');
-    return newIR;
-  }
-};
+// Step 3: Run IR passes
+console.log('\n4️⃣  Running Layer 1 passes...');
+const enrichedIR = runPasses(sampleProgram, [constantFoldingPass]);
+console.log('✅ IR transformation complete\n');
 
-console.log('✅ Defined 3 custom passes\n');
+// Compile with IR passes but NO codegen passes
+console.log('5️⃣  Compiling with IR passes only...');
+const irPassResult = runCompile(enrichedIR, [targetTypescript]);
+console.log('─'.repeat(60));
+console.log(irPassResult.files[0].content);
+console.log('─'.repeat(60));
+console.log('📝 Note: String concatenation eliminated by IR pass!\n');
 
-// Step 3: Run passes
-console.log('3️⃣  Running pass pipeline...');
-const enrichedIR = runPasses(sampleProgram, [
-  visibilityPass,
-  exportStylePass,
-  docPass
-]);
-console.log('✅ Pass pipeline completed\n');
+// Step 4: Define Layer 2 - Codegen Passes (TypeScript-specific)
+console.log('6️⃣  LAYER 2: Defining codegen passes (TypeScript-specific)...');
 
-// Step 4: Verify metadata was added
-console.log('4️⃣  Verifying metadata...');
-let metadataCount = 0;
-traverseIR(enrichedIR.root, (node) => {
+// Arrow function codegen pass - generates arrow function syntax
+const arrowFunctionPass = (node, context) => {
   if (node.type === 'function') {
-    console.log(`   Function: ${node.name}`);
-    console.log(`      isPublic: ${node.isPublic}`);
-    console.log(`      exportStyle: ${node.exportStyle}`);
-    console.log(`      docComment: ${node.docComment}`);
-    metadataCount++;
+    const name = node.name || 'anonymous';
+    const params = node.children?.filter(n => n.type === 'parameter') || [];
+    const body = node.children?.filter(n => n.type !== 'parameter') || [];
+    
+    const paramStr = params.map(p => {
+      const paramName = p.name || 'arg';
+      const typeNode = p.children?.find(n => n.type === 'type');
+      const typeName = typeNode?.value || 'any';
+      return `${paramName}: ${typeName}`;
+    }).join(', ');
+    
+    const returnType = node.value || 'void';
+    const bodyStr = body.map(b => context.defaultGenerator(b, context.indent + '  ')).join('\n');
+    
+    // Generate arrow function instead of regular function
+    return `${context.indent}export const ${name} = (${paramStr}): ${returnType} => {\n${bodyStr}\n${context.indent}};`;
+  }
+  return null; // Let default generator handle it
+};
+
+// Template literal codegen pass - uses template literals for strings
+const templateLiteralPass = (node) => {
+  if (node.type === 'literal' && typeof node.value === 'string') {
+    // Use template literal instead of double quotes
+    return `\`${node.value}\``;
+  }
+  return null;
+};
+
+console.log('✅ Defined arrow function pass (changes function syntax)');
+console.log('✅ Defined template literal pass (changes string syntax)');
+
+// Step 5: Compile with BOTH layers
+console.log('\n7️⃣  Compiling with BOTH IR passes + Codegen passes...');
+const fullResult = runCompile(enrichedIR, [targetTypescript], {
+  codegenPasses: {
+    function: arrowFunctionPass,
+    literal: templateLiteralPass
   }
 });
-console.log(`✅ Verified metadata on ${metadataCount} functions\n`);
-
-// Step 5: Compile to TypeScript
-console.log('5️⃣  Compiling to TypeScript...');
-const result = runCompile(enrichedIR, [targetTypescript]);
-console.log('✅ Compilation complete\n');
-
-// Step 6: Show the generated code
-console.log('6️⃣  Generated TypeScript:');
 console.log('─'.repeat(60));
-console.log(result.files[0].content);
+console.log(fullResult.files[0].content);
 console.log('─'.repeat(60));
 
-console.log('\n🎉 Pass integration test completed!');
-console.log('📝 Note: The TypeScript target currently ignores the metadata,');
-console.log('   but future targets or enhanced targets can respect it!\n');
+// Summary
+console.log('\n🎉 Two-Layer Pass Architecture Demo Complete!\n');
+console.log('📋 Summary:');
+console.log('   Layer 1 (IR Passes): Constant folding - semantic transformation');
+console.log('   Layer 2 (Codegen Passes): Arrow functions + template literals');
+console.log('\n💡 Key Insights:');
+console.log('   ✅ IR passes are target-agnostic (work for any language)');
+console.log('   ✅ Codegen passes are target-specific (TypeScript syntax)');
+console.log('   ✅ Both layers are orthogonal and composable');
+console.log('   ✅ Users define passes in their projects, not in toolkit\n');
+

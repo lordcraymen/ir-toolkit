@@ -1,11 +1,29 @@
 import type { IRProgram, IRNode } from '@lordcraymen/ir-core';
-import type { Target, EmitResult } from '@lordcraymen/ir-compiler-core';
+import type { Target, EmitResult, CodegenPasses, CodegenContext } from '@lordcraymen/ir-compiler-core';
+
+// TypeScript target options
+export interface TypeScriptTargetOptions {
+  codegenPasses?: CodegenPasses;
+}
 
 // Generate TypeScript code from IR node
-function generateNode(node: IRNode, indent: string = ''): string {
+function generateNode(node: IRNode, indent: string = '', passes?: CodegenPasses): string {
+  // Check if a codegen pass exists for this node type
+  if (passes && passes[node.type]) {
+    const context: CodegenContext = {
+      indent,
+      defaultGenerator: (n, i) => generateNode(n, i, passes)
+    };
+    const result = passes[node.type]!(node, context);
+    if (result !== null) {
+      return result;
+    }
+    // If pass returns null, fall through to default generation
+  }
+
   switch (node.type) {
     case 'program':
-      return (node.children || []).map(child => generateNode(child, indent)).join('\n\n');
+      return (node.children || []).map(child => generateNode(child, indent, passes)).join('\n\n');
     
     case 'function': {
       const name = node.name || 'anonymous';
@@ -20,19 +38,19 @@ function generateNode(node: IRNode, indent: string = ''): string {
       }).join(', ');
       
       const returnType = node.value || 'void';
-      const bodyStr = body.map(b => generateNode(b, indent + '  ')).join('\n');
+      const bodyStr = body.map(b => generateNode(b, indent + '  ', passes)).join('\n');
       
       return `${indent}export function ${name}(${paramStr}): ${returnType} {\n${bodyStr}\n${indent}}`;
     }
     
     case 'return': {
       const expr = node.children?.[0];
-      const exprStr = expr ? generateNode(expr, indent) : '';
+      const exprStr = expr ? generateNode(expr, indent, passes) : '';
       return `${indent}  return ${exprStr};`;
     }
     
     case 'expression': {
-      const parts = (node.children || []).map(c => generateNode(c, indent));
+      const parts = (node.children || []).map(c => generateNode(c, indent, passes));
       // Concatenate string literals with +
       if (parts.length > 1 && node.children?.every(c => c.type === 'literal' && typeof c.value === 'string')) {
         return parts.join(' + ');
@@ -51,8 +69,9 @@ function generateNode(node: IRNode, indent: string = ''): string {
 // TypeScript Target implementation
 export const targetTypescript: Target = {
   name: 'typescript',
-  emit(ir: IRProgram, _options?: Record<string, unknown>): EmitResult {
-    const content = `// Generated from IR v${ir.version}\n\n${generateNode(ir.root)}\n`;
+  emit(ir: IRProgram, options?: TypeScriptTargetOptions): EmitResult {
+    const passes = options?.codegenPasses;
+    const content = `// Generated from IR v${ir.version}\n\n${generateNode(ir.root, '', passes)}\n`;
 
     return {
       files: [
@@ -64,3 +83,4 @@ export const targetTypescript: Target = {
     };
   },
 };
+
