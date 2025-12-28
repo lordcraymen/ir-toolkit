@@ -1,6 +1,6 @@
 {
   "name": "@lordcraymen/ir-target-typescript",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "TypeScript target for the IR Toolkit",
   "main": "./dist/index.js",
@@ -35,6 +35,10 @@
     "url": "https://github.com/lordcraymen/ir-toolkit/issues"
   },
   "homepage": "https://github.com/lordcraymen/ir-toolkit#readme",
-  "keywords": ["target", "typescript", "code-generation"],
+  "keywords": [
+    "target",
+    "typescript",
+    "code-generation"
+  ],
   "license": "UNLICENSED"
 }

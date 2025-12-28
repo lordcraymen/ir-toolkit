@@ -1,6 +1,6 @@
 {
   "name": "@lordcraymen/ir-core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "IR Types and validators for the IR Toolkit",
   "main": "./dist/index.js",
@@ -32,6 +32,10 @@
     "url": "https://github.com/lordcraymen/ir-toolkit/issues"
   },
   "homepage": "https://github.com/lordcraymen/ir-toolkit#readme",
-  "keywords": ["ir", "compiler", "intermediate-representation"],
+  "keywords": [
+    "ir",
+    "compiler",
+    "intermediate-representation"
+  ],
   "license": "UNLICENSED"
 }
