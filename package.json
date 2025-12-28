@@ -1,0 +1,41 @@
+{
+  "name": "ir-toolkit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Monorepo for modular IR/Compiler/Targets suite",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "ci:install": "npm ci",
+    "lint": "eslint .",
+    "test": "npm run -ws test",
+    "build": "npm run -ws build",
+    "typecheck": "tsc -p tsconfig.base.json --noEmit",
+    "verify": "npm run ci:install && npm run lint && npm run test && npm run build",
+    "smoke": "node tooling/smoke.mjs",
+    "changeset:add": "changeset add",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.1",
+    "@types/node": "^20.11.5",
+    "@typescript-eslint/eslint-plugin": "^6.19.1",
+    "@typescript-eslint/parser": "^6.19.1",
+    "eslint": "^8.56.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.1"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lordcraymen/ir-toolkit.git"
+  },
+  "author": "lordcraymen",
+  "license": "MIT"
+}

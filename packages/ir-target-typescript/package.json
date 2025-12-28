@@ -1,0 +1,40 @@
+{
+  "name": "@lordcraymen/ir-target-typescript",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "TypeScript target for the IR Toolkit",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@lordcraymen/ir-core": "*"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lordcraymen/ir-toolkit.git",
+    "directory": "packages/ir-target-typescript"
+  },
+  "bugs": {
+    "url": "https://github.com/lordcraymen/ir-toolkit/issues"
+  },
+  "homepage": "https://github.com/lordcraymen/ir-toolkit#readme",
+  "keywords": ["target", "typescript", "code-generation"],
+  "license": "MIT"
+}
