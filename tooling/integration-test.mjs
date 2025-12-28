@@ -13,7 +13,7 @@ import { validate } from '../packages/ir-core/dist/index.js';
 import { runCompile } from '../packages/ir-compiler-core/dist/index.js';
 import { targetTypescript } from '../packages/ir-target-typescript/dist/index.js';
 import { targetRust } from '../packages/ir-target-rust/dist/index.js';
-import { writeFileSync, mkdirSync, rmSync, existsSync } from 'fs';
+import { writeFileSync, mkdirSync, rmSync } from 'fs';
 import { execSync } from 'child_process';
 import { join } from 'path';
 

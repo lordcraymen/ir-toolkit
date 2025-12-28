@@ -16,6 +16,8 @@
     "verify": "npm run ci:install && npm run lint && npm run test && npm run build",
     "smoke": "node tooling/smoke.mjs",
     "integration-test": "node tooling/integration-test.mjs",
+    "pre-commit": "npm run lint && npm run typecheck && npm run test",
+    "prepare": "node -e \"try { require('fs').mkdirSync('.git/hooks', {recursive: true}) } catch(e) {}\" && node -e \"require('fs').copyFileSync('tooling/pre-commit.sh', '.git/hooks/pre-commit')\" && node -e \"require('fs').chmodSync('.git/hooks/pre-commit', '755')\" || true",
     "changeset:add": "changeset add",
     "changeset:version": "changeset version",
     "changeset:publish": "changeset publish"
