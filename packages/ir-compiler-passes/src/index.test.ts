@@ -96,6 +96,7 @@ describe('ir-compiler-passes', () => {
       expect(clone).toEqual(sampleIR);
       expect(clone).not.toBe(sampleIR);
       expect(clone.root).not.toBe(sampleIR.root);
+      expect(JSON.stringify(clone)).toBe(JSON.stringify(sampleIR));
     });
 
     it('should not affect original when clone is modified', () => {

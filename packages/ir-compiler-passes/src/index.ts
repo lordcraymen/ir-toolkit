@@ -1,14 +1,15 @@
 import type { IRProgram, IRNode } from '@lordcraymen/ir-core';
 
-// Pass interface for IR transformations
-export interface Pass {
-  name: string;
-  transform(_ir: IRProgram, _options?: Record<string, unknown>): IRProgram;
-}
 
 // Pass options that can be passed to runPasses
 export interface PassOptions extends Record<string, unknown> {
   // Reserved for future use
+}
+
+// Pass interface for IR transformations
+export interface Pass {
+  name: string;
+  transform(_ir: IRProgram, _options?: PassOptions): IRProgram;
 }
 
 // Helper to run a pipeline of passes
