@@ -1,6 +1,6 @@
 {
   "name": "@lordcraymen/ir-compiler-core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Core compiler orchestration for the IR Toolkit",
   "main": "./dist/index.js",
@@ -36,6 +36,10 @@
     "url": "https://github.com/lordcraymen/ir-toolkit/issues"
   },
   "homepage": "https://github.com/lordcraymen/ir-toolkit#readme",
-  "keywords": ["compiler", "orchestration", "ir"],
+  "keywords": [
+    "compiler",
+    "orchestration",
+    "ir"
+  ],
   "license": "UNLICENSED"
 }
