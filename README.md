@@ -64,4 +64,4 @@ This project uses [Changesets](https://github.com/changesets/changesets) for ver
 
 ## 📄 License
 
-MIT © lordcraymen
+UNLICENSED © Florian "lordcraymen" Patzke
