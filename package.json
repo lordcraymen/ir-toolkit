@@ -11,7 +11,7 @@
     "ci:install": "npm ci",
     "lint": "eslint .",
     "test": "npm run -ws test",
-    "build": "npm run build -w packages/ir-caps -w packages/ir-core && npm run build -w packages/ir-compiler-core && npm run build -w packages/ir-runtime-node -w packages/ir-target-typescript",
+    "build": "npm run build -w packages/ir-caps -w packages/ir-core && npm run build -w packages/ir-compiler-core && npm run build -w packages/ir-runtime-node -w packages/ir-target-typescript -w packages/ir-target-rust",
     "typecheck": "tsc -p tsconfig.base.json --noEmit",
     "verify": "npm run ci:install && npm run lint && npm run test && npm run build",
     "smoke": "node tooling/smoke.mjs",
