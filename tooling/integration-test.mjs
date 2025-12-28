@@ -156,7 +156,9 @@ try {
       execSync('rustc --version', { stdio: 'pipe' });
       // Use rustc to check syntax without linking
       const rustDir = join(TEST_OUTPUT_DIR, 'rust');
-      execSync(`rustc --crate-type lib --emit=metadata -o /dev/null ${rustDir}/lib.rs 2>&1`, {
+      const tempOutDir = join(TEST_OUTPUT_DIR, '.rustc-temp');
+      mkdirSync(tempOutDir, { recursive: true });
+      execSync(`rustc --crate-type lib --emit=metadata --out-dir ${tempOutDir} ${rustDir}/lib.rs`, {
         stdio: 'pipe',
         encoding: 'utf8'
       });
@@ -165,6 +167,13 @@ try {
       if (rustError.message.includes('rustc --version')) {
         console.log('   ⚠️  Rust compiler not found, skipping Rust validation');
       } else {
+        // Show the actual Rust compilation error
+        console.error('   ❌ Rust compilation error:');
+        if (rustError.stderr) {
+          console.error(rustError.stderr);
+        } else if (rustError.stdout) {
+          console.error(rustError.stdout);
+        }
         throw rustError;
       }
     }
